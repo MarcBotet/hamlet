@@ -1,6 +1,6 @@
 # HAMLET
 
-## To Adapt or Not to Adapt? Real-Time Adaptation for Semantic Segmentation
+## To Adapt or Not to Adapt? Real-Time Adaptation for Semantic Segmentation (ICCV23)
 [Marc Botet Colomer](https://github.com/MarcBotet)<sup>1,2*</sup> [Pier Luigi Dovesi](https://github.com/pierluigidovesi)<sup>3*†</sup> [Theodoros Panagiotakopoulos](https://github.com/theo2021)<sup>4</sup> [Joao Frederico Carvalho](https://scholar.google.se/citations?user=-GqJRNoAAAAJ&hl=sv) <sup>1</sup> [Linus Härenstam-Nielsen](https://github.com/Linusnie)<sup>5,6</sup> [Hossein Azizpour](https://scholar.google.se/citations?user=t6CRgJsAAAAJ&hl=en)<sup>2</sup> [Hedvig Kjellström](https://scholar.google.com/citations?user=wr3CtKAAAAAJ&hl=en)<sup>2,3</sup> [Daniel Cremers](https://scholar.google.com/citations?user=cXQciMEAAAAJ&hl=en)<sup>5,6,7</sup> [Matteo Poggi](https://github.com/mattpoggi)<sup>8</sup>
 
 <sup>1</sup> [Univrses](https://univrses.com/) <sup>2</sup> [KTH](https://www.kth.se/en) <sup>3</sup> [Silo AI](https://www.silo.ai/) <sup>4</sup> [King](https://www.king.com/) <sup>5</sup> [Kudan](https://www.kudan.io/) <sup>6</sup> [Technical University of Munich](https://www.tum.de/en/) <sup>7</sup> [University of Oxford](https://www.ox.ac.uk/) <sup>8</sup> [University of Bologna](https://www.unibo.it/en)
@@ -8,9 +8,13 @@
 <sup>*</sup> Joint first authorship.
 <sup>†</sup> Part of the work carried out while at Univrses.
 
+📜 [arxiv](https://arxiv.org/abs/.....)
+💀 [project page](https://marcbotet.github.io/hamlet-web/)
+📽️ [video](https://www.youtube.com/......)
+
 ![Method Cover](images/hamlet_cover.png)
 
-**All assets to run a simple inference can be found** [here](https://drive.google.com/drive/folders/1p3VoGrsQsI7wMCYeAb7nYEImW0oIrmMR?usp=sharing).
+All assets to run a simple inference can be found [here](https://drive.google.com/drive/folders/1p3VoGrsQsI7wMCYeAb7nYEImW0oIrmMR?usp=sharing).
 
 ## Citation
 
