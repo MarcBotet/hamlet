@@ -76,7 +76,7 @@ python tools/convert_datasets/cityscapes.py /data/datasets/Cityscapes --out-dir 
 
 ## Training
 
-For convenience, we provide the configuration for HAMLET in the config.py file, select experiment -1 for using the config file. If wandb is configurated can be activated setting the wandb argument to 1
+For convenience, we provide the configuration for HAMLET by selecting experiment 0. If wandb is configurated can be activated by setting the wandb argument to 1
 
 ```shell
 python run_experiments.py --exp 0 --wandb 1
@@ -84,18 +84,18 @@ python run_experiments.py --exp 0 --wandb 1
 
 Make sure to place the pretrained model `mitb1_uda.pth` in `pretrained/`. 
 
-We also provide a `config.py` file where to run multiple experiments changing parameters. Select `--exp -1`to use it.
+We also provide a `config.py` file where to run multiple experiments by changing parameters. Select `--exp -1`to use it.
 
 ## Code structure
 This code is based on MMSegmentation project. The most relevant files are:
 
 * [online_src/domain_indicator_orchestrator.py](online_src/domain_indicator_orchestrator.py): Implementation of the Adaptive Domain Detection.
 * [online_src/online_runner.py](online_src/online_runner.py): Runner for Hamlet.
-* [online_src/buffer.py](online_src/buffer.py)
-* [mmseg/models/segmentors/modular_encoder_decoder.py](mmseg/models/segmentors/modular_encoder_decoder.py)
-* [mmseg/models/decode_heads/incremental_decode_head.py]([mmseg/models/decode_heads/incremental_decode_head.py)
-* [mmseg/models/decode_heads/segformer_head.py]([mmseg/models/decode_heads/segformer_head.py)
-* [mmseg/models/backbones/mix_transformer.py]([mmseg/models/backbones/mix_transformer.py)
+* [online_src/buffer.py](online_src/buffer.py): Buffer sampling methods
+* [mmseg/models/segmentors/modular_encoder_decoder.py](mmseg/models/segmentors/modular_encoder_decoder.py): Implementation of HAMT
+* [mmseg/models/decode_heads/incremental_decode_head.py]([mmseg/models/decode_heads/incremental_decode_head.py): Handle the lightweight decoder
+* [mmseg/models/decode_heads/segformer_head.py]([mmseg/models/decode_heads/segformer_head.py): Implementation of the lightweight decoder on SegFormer
+* [mmseg/models/backbones/mix_transformer.py]([mmseg/models/backbones/mix_transformer.py): Implementationf of modular freezing for HAMT
 * [mmseg/models/uda/dacs.py]([mmseg/models/uda/dacs.py): UDA method using hamlet strategies
 * [mmseg/core/evaluation/eval_hooks.py]([mmseg/core/evaluation/eval_hooks.py): Evaluation methods
 
