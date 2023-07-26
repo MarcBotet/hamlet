@@ -18,7 +18,7 @@ If you find this repo useful for your work, please cite our paper:
 ```shell
 @inproceedings{colomer2023toadapt,
       title = {To Adapt or Not to Adapt? Real-Time Adaptation for Semantic Segmentation},
-      author = {Colomer, Marc Botet and 
+      author = {Botet Colomer, Marc and 
                 Dovesi, Pier Luigi and 
                 Panagiotakopoulos, Theodoros and 
                 Carvalho, Joao Frederico and 
