@@ -1,4 +1,4 @@
-# HAMLET
+# 💀 HAMLET
 
 ## To Adapt or Not to Adapt? Real-Time Adaptation for Semantic Segmentation (ICCV23)
 [Marc Botet Colomer](https://github.com/MarcBotet)<sup>1,2*</sup> [Pier Luigi Dovesi](https://github.com/pierluigidovesi)<sup>3*†</sup> [Theodoros Panagiotakopoulos](https://github.com/theo2021)<sup>4</sup> [Joao Frederico Carvalho](https://scholar.google.se/citations?user=-GqJRNoAAAAJ&hl=sv) <sup>1</sup> [Linus Härenstam-Nielsen](https://github.com/Linusnie)<sup>5,6</sup> [Hossein Azizpour](https://scholar.google.se/citations?user=t6CRgJsAAAAJ&hl=en)<sup>2</sup> [Hedvig Kjellström](https://scholar.google.com/citations?user=wr3CtKAAAAAJ&hl=en)<sup>2,3</sup> [Daniel Cremers](https://scholar.google.com/citations?user=cXQciMEAAAAJ&hl=en)<sup>5,6,7</sup> [Matteo Poggi](https://github.com/mattpoggi)<sup>8</sup>
@@ -10,7 +10,7 @@
 
 📜 [arxiv](https://arxiv.org/abs/.....)
 💀 [project page](https://marcbotet.github.io/hamlet-web/)
-📽️ [video](https://www.youtube.com/......)
+📽️ [video](https://www.youtube.com/watch?v=zjxPbCphPDE)
 
 ![Method Cover](images/hamlet_cover.png)
 
