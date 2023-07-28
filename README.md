@@ -8,7 +8,7 @@
 <sup>*</sup> Joint first authorship.
 <sup>†</sup> Part of the work carried out while at Univrses.
 
-📜 [arxiv](https://arxiv.org/abs/.....)
+📜 [arxiv](https://arxiv.org/abs/2307.15063)
 💀 [project page](https://marcbotet.github.io/hamlet-web/)
 📽️ [video](https://www.youtube.com/watch?v=zjxPbCphPDE)
 
