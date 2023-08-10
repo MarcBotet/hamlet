@@ -129,7 +129,6 @@ wandb/
 /environment
 
 tmp_run.sh
-config.py
 
 pretrained/
 random_modules/
