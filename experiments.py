@@ -487,6 +487,7 @@ def generate_experiment_cfgs(id):
         "clear",
     ]
     num_epochs = [3] * len(domain_order)
+    uda = "dacs_online"
 
     architecture, backbone = ("segformer", "mitb1")
     pretrained_segmentator = "pretrained/mitb1_uda.pth"
@@ -521,6 +522,7 @@ def generate_experiment_cfgs(id):
     deterministic = False
     perfect_determinism = False
     iters = 40000  # Not relevant for online training
+    seed = 0
 
     # -------------------------------------------------------------------------
     # Config experiments:
