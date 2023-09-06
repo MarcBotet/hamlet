@@ -14,8 +14,6 @@
 
 ![Method Cover](images/hamlet_cover.png)
 
-All assets to run a simple inference can be found [here](https://drive.google.com/drive/folders/1p3VoGrsQsI7wMCYeAb7nYEImW0oIrmMR?usp=sharing).
-
 ## Citation
 
 If you find this repo useful for your work, please cite our paper:
@@ -81,10 +79,11 @@ For convenience, we provide the configuration for HAMLET by selecting experiment
 ```shell
 python run_experiments.py --exp 0 --wandb 1
 ```
+All assets to run a training can be found [here](https://drive.google.com/drive/folders/1p3VoGrsQsI7wMCYeAb7nYEImW0oIrmMR?usp=sharing).
 
-Make sure to place the pretrained model `mitb1_uda.pth` in `pretrained/`. 
+Make sure to place the pretrained model `mitb1_uda.pth` in `pretrained/`.
 
-We also provide a `config.py` file where to run multiple experiments by changing parameters. Select `--exp -1`to use it.
+We also provide a `config.py` file where to run multiple experiments by changing parameters. Select `--exp -1`to use it. Then make sure to place the random modules to `random_modules/`.
 
 ## Code structure
 This code is based on MMSegmentation project. The most relevant files are:
