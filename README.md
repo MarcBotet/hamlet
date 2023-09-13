@@ -74,16 +74,16 @@ python tools/convert_datasets/cityscapes.py /data/datasets/Cityscapes --out-dir 
 
 ## Training
 
-For convenience, we provide the configuration for HAMLET by selecting experiment 0. If wandb is configurated can be activated by setting the wandb argument to 1
+For convenience, it is possible to run the configuration selecting experiment -1. If wandb is configurated can be activated by setting the wandb argument to 1
 
 ```shell
-python run_experiments.py --exp 0 --wandb 1
+python run_experiments.py --exp -1 --wandb 1
 ```
 All assets to run a training can be found [here](https://drive.google.com/drive/folders/1p3VoGrsQsI7wMCYeAb7nYEImW0oIrmMR?usp=sharing).
 
 Make sure to place the pretrained model `mitb1_uda.pth` in `pretrained/`.
 
-We also provide a `config.py` file where to run multiple experiments by changing parameters. Select `--exp -1`to use it. Then make sure to place the random modules to `random_modules/`.
+We provide a `config.py` file that can be easily modified to run multiple experiments by changing parameters. Make sure to place the random modules to `random_modules/`.
 
 ## Code structure
 This code is based on MMSegmentation project. The most relevant files are:
