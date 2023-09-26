@@ -161,8 +161,9 @@ def single_gpu_test(
             if efficient_test:
                 result = efficient_np2tmp(result, tmpdir='.efficient_test')
             results.append(result)
-
-        for _ in range(len(results)):
+       
+        batch_size = len(result)
+        for _ in range(batch_size):
             prog_bar.update()
     return results
 
