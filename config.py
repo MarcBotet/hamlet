@@ -87,7 +87,7 @@ reduce_training = [
 batch_size = 1
 iters = 40000
 
-modules_update = "random_modules/random_[0.25, 0.25, 0.25, 0.25].npy"
+modules_update = None # Update this with the desired random modules if random policy is selected
 pretrained_segmentator = "pretrained/mitb1_uda.pth"
 student_pretrained = pretrained_segmentator
 
