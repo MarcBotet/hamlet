@@ -146,6 +146,7 @@ def main(args):
     meta['seed'] = args.seed
     meta['exp_name'] = osp.splitext(osp.basename(args.config))[0]
 
+    # ----- Build Training Model (default)
     model = build_train_model(
         cfg, train_cfg=cfg.get('train_cfg'), test_cfg=cfg.get('test_cfg'))
     if ('uda' not in cfg or not 'segmentator_pretrained' in cfg['uda']) and cfg['segmentator_pretrained'] is None:
@@ -157,6 +158,14 @@ def main(args):
         logger.info('Init weights using a warmup model')
     else:
         logger.info('Init weights using a warmup model')
+    
+    # # ----- Build CLIP Model (custom)
+    # from clipseg.models.clipseg import CLIPDensePredT
+    # model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64)
+    # # model.eval() #Freeze -> ?
+    # # model.load_state_dict(torch.load('weights/rd64-uni.pth', map_location=torch.device('cpu')), strict=False)
+    # model.load_state_dict(torch.load('clipseg/weights/rd64-uni.pth', map_location=torch.device('cpu')), strict=False)
+    # # -----
 
     logger.info(model)
 

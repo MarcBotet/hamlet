@@ -363,7 +363,8 @@ def generate_experiment_cfgs(id):
             interval = iters if perfect_determinism else iters // 10
 
         # we need efficient test to handle the 4 decoder outputs
-        efficient_test = False  # 'mit' in backbone
+        # efficient_test = False  # 'mit' in backbone
+        efficient_test = True #!DEBUGs
         cfg["evaluation"] = dict(interval=interval, metric="mIoU", efficient_test=efficient_test)
 
         # Construct config name
@@ -506,7 +507,8 @@ def generate_experiment_cfgs(id):
     buffer = 1000
     buffer_policy = "rare_class_sampling"
 
-    student_pretrained = "pretrained/mitb1_modular.pth"
+    # student_pretrained = "pretrained/mitb1_modular.pth"
+    student_pretrained = "pretrained/mitb1_uda.pth"
     dynamic_dacs = (0.5, 0.75)
     domain_indicator = True
     base_iters = 750
