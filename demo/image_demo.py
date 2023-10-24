@@ -1,3 +1,6 @@
+# Original code from: https://github.com/lhoyer/DAFormer
+# Not supported by HAMLET
+######################################
 # Obtained from: https://github.com/open-mmlab/mmsegmentation/tree/v0.16.0
 # Modifications:
 # - Config and checkpoint update
