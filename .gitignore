@@ -132,3 +132,13 @@ tmp_run.sh
 
 pretrained/
 random_modules/
+
+#efficient_test
+.efficient_test
+
+#!CUSTOM
+configs/_base_/datasets_orig/
+deprecated/
+notebooks/
+workspace/
+
