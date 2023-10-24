@@ -152,6 +152,7 @@ def single_gpu_test(
                         cv.imwrite(out_file, img_pred)
                         source = out_file.replace(".png", "_source.png")
                         cv.imwrite(source, gt_image)
+                        del img_show, img_pred, gt_image #!DEBUG
 
         if isinstance(result, list):
             if efficient_test:
@@ -161,9 +162,15 @@ def single_gpu_test(
             if efficient_test:
                 result = efficient_np2tmp(result, tmpdir='.efficient_test')
             results.append(result)
-
-        for _ in range(len(results)):
+    
+        for _ in range(len(result)):
             prog_bar.update()
+
+        del result #!DEBUG
+
+    # for _ in range(len(results)):
+    #     prog_bar.update()
+
     return results
 
 
