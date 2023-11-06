@@ -334,7 +334,6 @@ class OnlineEvalHook(_EvalHook):
             )
             self.evaluate(dataloader, runner, results, dataset_name)
             # ugly way to ensure ram does not crash having multiple val datasets
-            del results
             gc.collect()
 
         try:

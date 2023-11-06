@@ -134,7 +134,9 @@ class OnlineRunner(EpochBasedRunner):
         if self.mode_train:
             kwargs["domain_indicator"] = self.domain_indicator.get_args()
 
+            # train_step
             outputs = self.model.train_step(data_batch, self.optimizer, **kwargs)
+
             self.time_elapsed.append(outputs["time"])
         else:
             outputs = self.model.val_step(data_batch, **kwargs)
@@ -159,6 +161,10 @@ class OnlineRunner(EpochBasedRunner):
         self.call_hook("before_train_epoch")
         time.sleep(2)  # Prevent possible deadlock during epoch transition
         for i, target_data in enumerate(self.data_loader):
+            # if i > 5: break #!DEBUG
+            # if i > 100:
+            #     break
+            #     a=1
             source_data = self.next_source()
             data_batch = {
                 **source_data,

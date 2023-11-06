@@ -511,6 +511,7 @@ class DACS(ModularUDADecorator):
         # backward pass
         (clean_loss + feat_loss + mix_loss).backward()
 
+        # if not self.benchmark and self.local_iter % 20 == 0: #!DEBUG
         if not self.benchmark and self.local_iter % self.debug_img_interval == 0:
             out_dir = os.path.join(self.train_cfg["work_dir"], "class_mix_debug")
             os.makedirs(out_dir, exist_ok=True)
@@ -622,6 +623,8 @@ class DACS(ModularUDADecorator):
                 for ax in axs.flat:
                     ax.axis("off")
                 plt.savefig(os.path.join(out_dir, f"{(self.local_iter + 1):06d}_{j}.png"))
+                # save_meta_imgname = target_img_metas[j]["ori_filename"].split('/')[-1].replace(".png", "")
+                # plt.savefig(os.path.join(out_dir, f"{(self.local_iter + 1):06d}_{j}_{save_meta_imgname}.png"))
                 plt.close()
 
         self.local_iter += 1

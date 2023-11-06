@@ -16,10 +16,11 @@ udas = [
 ]
 
 max_lr = [
-    0.001,
+    0.001, #1e-3
 ]
 
 lr = [
+    # 6e-5
     0.000015,
 ]
 
@@ -90,6 +91,7 @@ iters = 40000
 #modules_update = "random_modules/random_[0.25, 0.25, 0.25, 0.25].npy"
 modules_update = "random_modules/online_random.npy"
 pretrained_segmentator = "pretrained/mitb1_uda.pth"
+# pretrained_segmentator = "pretrained/mitb1_imagenet.pth"
 student_pretrained = pretrained_segmentator
 
 seed = [0]

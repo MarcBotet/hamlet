@@ -152,7 +152,31 @@ def single_gpu_test(
                         cv.imwrite(out_file, img_pred)
                         source = out_file.replace(".png", "_source.png")
                         cv.imwrite(source, gt_image)
-                        del img_show, img_pred, gt_image #!DEBUG
+                        # a=1
+
+                        # #!DEBUG
+                        # import matplotlib.pyplot as plt
+                        # from mmseg.models.utils.visualization import subplotimg
+
+                        # ori_filename = color_gt_path.replace("gtFine", "leftImg8bit").replace("_color", "")
+                        # ori_image = cv.imread(ori_filename)
+
+                        # src_image = cv.imread(img_meta["filename"])
+                        # if np.unique(src_image).shape == (2,):
+                        #     src_image = cv.cvtColor(src_image, cv.COLOR_BGR2GRAY)
+
+                        # fig, axs = plt.subplots(2, 2)
+                        # subplotimg(axs[0][0], ori_image, "Original image")
+                        # subplotimg(axs[1][0], src_image, "Source image")
+                        # subplotimg(axs[0][1], gt_image, "Source mask")
+                        # subplotimg(axs[1][1], img_pred, "Pred mask")
+
+                        # plt.suptitle(img_meta["ori_filename"])
+
+                        # out_debug_file = out_file.replace("epoch_", "epoch_debug_").replace("iter_", "iter_debug_")
+                        # Path(osp.dirname(out_debug_file)).mkdir(parents=True, exist_ok=True)
+                        # plt.savefig(out_debug_file)
+                        # #------
 
         if isinstance(result, list):
             if efficient_test:
@@ -166,8 +190,6 @@ def single_gpu_test(
         batch_size = len(result)
         for _ in range(batch_size):
             prog_bar.update()
-
-        del result #!DEBUG
 
     # for _ in range(len(results)):
     #     prog_bar.update()
