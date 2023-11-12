@@ -9,6 +9,10 @@ import shutil
 
 import torch
 from experiments import generate_experiment_cfgs
+
+from experiments_custom import generate_experiment_cfgs as generate_experiment_cfgs_custom
+CUSTOM = True
+
 from mmcv import Config, get_git_hash
 
 from mmseg.apis import set_random_seed
@@ -49,6 +53,12 @@ if __name__ == "__main__":
         default=0,
         help="1 to log results on wandb",
     )
+    parser.add_argument(
+        "--custom",
+        type=int,
+        default=1,
+        help="activate CUSTOM mode"
+    )
 
     parser.add_argument("--machine", type=str, choices=["local"], default="local")
     parser.add_argument("--debug", action="store_true")
@@ -60,6 +70,8 @@ if __name__ == "__main__":
     GEN_CONFIG_DIR = "configs/generated/"
     JOB_DIR = "jobs"
     cfgs, config_files = [], []
+
+    if args.custom == 0: CUSTOM = False
 
     # Training with Predefined Config
     if args.config is not None:
@@ -88,7 +100,12 @@ if __name__ == "__main__":
     if args.exp is not None:
         for exp in args.exp:
             exp_name = f"{args.machine}-exp{exp}"
-            cfgs_aux = generate_experiment_cfgs(exp)
+
+            if CUSTOM:
+                cfgs_aux = generate_experiment_cfgs_custom(exp)
+            else:
+                cfgs_aux = generate_experiment_cfgs(exp)
+
             # Generate Configs
             for i, cfg in enumerate(cfgs_aux):
                 if args.debug:

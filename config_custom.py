@@ -4,15 +4,18 @@ datasets = [
 ]
 
 domain_order = [
-    ["clear", "25mm", "50mm", "75mm", "100mm", "200mm"] + ["100mm", "75mm", "50mm", "25mm", "clear"]
+    ["clear"]
+    # ["clear", "25mm", "50mm", "75mm", "100mm", "200mm"] + ["100mm", "75mm", "50mm", "25mm", "clear"]
 ]
-num_epochs = 3
+num_epochs = 10
 
 models = [
-    ("segformer", "mitb1"),
+    # ("segformer", "mitb5_custom"),
+    ("segformer", "mitb1")
 ]
 udas = [
     "dacs_online", # Hamlet UDA
+    # "custom_dacs_online"
 ]
 
 max_lr = [
@@ -35,7 +38,7 @@ lr_far_domain = [
 train = True
 
 modular_training = [
-    True,
+    False,
 ]
 training_policy = [  # options True:['MAD_UP', 'RANDOM', 1]
     "MAD_UP",
@@ -67,7 +70,7 @@ mad_time_update = [
 ]
 
 domain_indicator = [
-    True,
+    False,
 ]
 
 dynamic_dacs = [
@@ -85,13 +88,14 @@ reduce_training = [
     (0.25, 0.75),
 ]
 
-batch_size = 1
+batch_size = 32
 iters = 40000
 
-#modules_update = "random_modules/random_[0.25, 0.25, 0.25, 0.25].npy"
+# modules_update = "random_modules/random_[0.25, 0.25, 0.25, 0.25].npy"
 modules_update = "random_modules/online_random.npy"
-# pretrained_segmentator = "pretrained/mitb1_uda.pth"
-# pretrained_segmentator = "pretrained/segformer.b1.512x512.ade.160k.pth"
+modules_update = None
+# pretrained_segmentator = "pretrained/mitb5_uda.pth"
+# pretrained_segmentator = "pretrained/mit_b5.pth"
 pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
 student_pretrained = pretrained_segmentator
 

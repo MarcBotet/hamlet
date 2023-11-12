@@ -174,6 +174,7 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
                       img_metas,
                       gt_semantic_seg,
                       train_cfg,
+                      confidence=None, #!DEBUG
                       seg_weight=None):
         """Forward function for training.
         Args:

@@ -18,7 +18,16 @@ from mmcv.utils import Config, DictAction, get_git_hash
 from mmcv.runner import load_checkpoint
 
 from mmseg import __version__
-from mmseg.apis import set_random_seed, train_segmentor
+
+#!DEBUG
+# from mmseg.apis import set_random_seed, train_segmentor
+from run_experiments import CUSTOM
+if CUSTOM:
+    from mmseg.apis import set_random_seed
+    from mmseg.apis import train_segmentor_sup as train_segmentor
+else:
+    from mmseg.apis import set_random_seed, train_segmentor
+
 from mmseg.datasets import build_dataset
 from mmseg.models.builder import build_train_model
 from mmseg.utils import collect_env, get_root_logger
@@ -81,6 +90,10 @@ def main(args):
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
+
+    a=1
+    from run_experiments import CUSTOM
+    if CUSTOM: cfg["custom"] = cfg["uda"].copy()
 
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:

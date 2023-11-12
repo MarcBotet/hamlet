@@ -18,6 +18,7 @@ LOSSES = MODELS
 SEGMENTORS = MODELS
 UDA = MODELS
 TENT = MODELS
+CUSTOM = MODELS
 
 
 def build_backbone(cfg):
@@ -56,6 +57,11 @@ def build_train_model(cfg, train_cfg=None, test_cfg=None):
         # cfg.uda['max_iters'] = cfg.runner.max_iters
         return TENT.build(
             cfg.others, default_args=dict(train_cfg=train_cfg, test_cfg=test_cfg))
+    elif "custom" in cfg:
+        cfg.custom["model"] = cfg.model
+        return UDA.build(
+            cfg.custom, default_args=dict(train_cfg=train_cfg, test_cfg=test_cfg)
+        )
     elif 'uda' in cfg:
         cfg.uda['model'] = cfg.model
         # cfg.uda['max_iters'] = cfg.runner.max_iters
