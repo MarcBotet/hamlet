@@ -4,14 +4,14 @@ datasets = [
 ]
 
 domain_order = [
-    ["clear"]
-    # ["clear", "25mm", "50mm", "75mm", "100mm", "200mm"] + ["100mm", "75mm", "50mm", "25mm", "clear"]
+    ["clear", "25mm", "50mm", "75mm", "100mm", "200mm"] + ["100mm", "75mm", "50mm", "25mm", "clear"]
 ]
 num_epochs = 10
 
 models = [
     # ("segformer", "mitb5_custom"),
-    ("segformer", "mitb1")
+    # ("segformer", "mitb1")
+    ("segformer", "mitb5")
 ]
 udas = [
     "dacs_online", # Hamlet UDA
@@ -24,7 +24,8 @@ max_lr = [
 
 lr = [
     # 6e-5
-    0.000015,
+    # 0.000015,
+    0.00015,
 ]
 
 lr_policy = [
@@ -88,7 +89,7 @@ reduce_training = [
     (0.25, 0.75),
 ]
 
-batch_size = 32
+batch_size = 4
 iters = 40000
 
 # modules_update = "random_modules/random_[0.25, 0.25, 0.25, 0.25].npy"
@@ -96,7 +97,8 @@ modules_update = "random_modules/online_random.npy"
 modules_update = None
 # pretrained_segmentator = "pretrained/mitb5_uda.pth"
 # pretrained_segmentator = "pretrained/mit_b5.pth"
-pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
+# pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
+pretrained_segmentator = "pretrained/segformer.b5.1024x1024.city.160k.pth"      #segformer (evaluation)
 student_pretrained = pretrained_segmentator
 
 seed = [0]

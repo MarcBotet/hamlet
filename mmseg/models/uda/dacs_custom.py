@@ -32,7 +32,7 @@ from torch.nn.modules.dropout import _DropoutNd
 
 from mmseg.core import add_prefix
 from mmseg.models import UDA, build_segmentor
-from mmseg.models.uda.uda_decorator import CustomUDADecorator, get_module
+from mmseg.models.uda.uda_decorator import UDADecorator, get_module, CustomUDADecorator
 from mmseg.models.utils.dacs_transforms import (
     denorm,
     get_class_masks,
@@ -58,9 +58,9 @@ def calc_grad_magnitude(grads, norm_type=2.0):
 
 
 @UDA.register_module()
-class CustomDACS(CustomUDADecorator):
+class DACS(CustomUDADecorator):
     def __init__(self, **cfg):
-        super(CustomDACS, self).__init__(**cfg)
+        super(DACS, self).__init__(**cfg)
         self.local_iter = 0
         # self.max_iters = cfg['max_iters']
         self.alpha = cfg["alpha"]
@@ -162,8 +162,8 @@ class CustomDACS(CustomUDADecorator):
                 img_metas,
                 ps_label,
                 return_feat=True,
-                module=1,
-                confidence=True,
+                # module=1,
+                # confidence=True,
             )
             static_losses.pop("features")
             _, static_log_vars = self._parse_losses(static_losses, mode=self.current_weight)
@@ -198,42 +198,9 @@ class CustomDACS(CustomUDADecorator):
             _, pseudo_label = torch.max(ema_softmax, dim=1)
 
             # confidence of teacher
-            teacher_losses = self.get_ema_model().entropy_prediction(target_img, module=4)
+            teacher_losses = self.get_ema_model().entropy_prediction(target_img)
             teacher_losses = add_prefix(teacher_losses, "teacher")
             log_vars.update(teacher_losses)
-
-            # confidence of the student of the target
-            ps_label = pseudo_label[:, None, :, :]
-            mini_losses = self.get_model().forward_train(
-                target_img,
-                img_metas,
-                ps_label,
-                return_feat=True,
-                module=4,
-                confidence=True,
-            )
-            mini_losses.pop("features")
-            _, student_log_vars = self._parse_losses(mini_losses, mode=self.current_weight)
-            student_losses = add_prefix(student_log_vars, "student")
-            log_vars.update(student_losses)
-
-            # confidence of little static
-            if not self.use_domain_indicator:
-                self.get_imnet_model().eval()
-                ps_label = pseudo_label[:, None, :, :]
-                static_losses = self.get_imnet_model().forward_train(
-                    target_img,
-                    img_metas,
-                    ps_label,
-                    return_feat=True,
-                    module=1,
-                    confidence=True,
-                )
-                static_losses.pop("features")
-                _, static_log_vars = self._parse_losses(static_losses, mode=self.current_weight)
-                static_losses = add_prefix(static_log_vars, "static")
-                log_vars.update(static_losses)
-        return log_vars
 
     def train_step(self, data_batch, optimizer, **kwargs):
         """The iteration step during training.
@@ -263,7 +230,8 @@ class CustomDACS(CustomUDADecorator):
         """
         self.get_model().train()
         train = True
-        domain_indicator = kwargs.get("domain_indicator")
+        domain_indicator = False
+        # domain_indicator = kwargs.get("domain_indicator")
         if domain_indicator:
             self.dacs_ratio = 1 - domain_indicator["dacs"]
             train = domain_indicator.get("train", True)
@@ -284,19 +252,19 @@ class CustomDACS(CustomUDADecorator):
             torch.cuda.synchronize()
             elapsed = time.perf_counter() - start_time
 
-            # relevant logs but should not be included in the FPS count
-            aux_log = self.student_teacher_logs(**data_batch)
-            log_vars.update(aux_log)
+            # relevant logs but should not be included in the FPS count (디버깅필요! Incremental)
+            # aux_log = self.student_teacher_logs(**data_batch)
+            # log_vars.update(aux_log)
 
-            self.get_model().update_mad_histogram(
-                log_vars[f"mix.decode_{self.get_main_model()}.loss_seg"],
-                self.num_module,
-                self.local_iter - 1,
-            )
+            # self.get_model().update_mad_histogram(
+            #     log_vars[f"mix.decode_{self.get_main_model()}.loss_seg"],
+            #     self.num_module,
+            #     self.local_iter - 1,
+            # )
 
             log_vars.pop("loss", None)  # remove the unnecessary 'loss'
 
-            log_vars = self.get_model().logs_for_mad(log_vars)
+            # log_vars = self.get_model().logs_for_mad(log_vars)
 
         else:
             torch.cuda.synchronize()
@@ -312,7 +280,8 @@ class CustomDACS(CustomUDADecorator):
 
     def masked_feat_dist(self, f1, f2, mask=None):
         feat_diff = f1 - f2
-        if self.get_training_policy() == "MAD" and self.num_module < 4:
+        if False: #!DEBUG
+        # if self.get_training_policy() == "MAD" and self.num_module < 4:
             # print(self.num_module)
             feat_diff.requires_grad = True
         # mmcv.print_log(f'fdiff: {feat_diff.shape}', 'mmseg')
@@ -402,8 +371,8 @@ class CustomDACS(CustomUDADecorator):
             img_metas,
             gt_semantic_seg,
             return_feat=True,
-            module=main_model,
-            confidence=True,
+            # module=main_model,
+            # confidence=True,
         )
         src_feat = clean_losses.pop("features")
         clean_loss, clean_log_vars = self._parse_losses(clean_losses, mode=self.current_weight)
@@ -475,8 +444,8 @@ class CustomDACS(CustomUDADecorator):
             mixed_lbl,
             pseudo_weight,
             return_feat=True,
-            module=main_model,
-            confidence=True,
+            # module=main_model,
+            # confidence=True,
         )
         mix_losses.pop("features")
         mix_losses = add_prefix(mix_losses, "mix")
@@ -499,8 +468,8 @@ class CustomDACS(CustomUDADecorator):
                     img_metas,
                     ps_label,
                     return_feat=True,
-                    module=1,
-                    confidence=True,
+                    # module=1,
+                    # confidence=True,
                 )
                 static_losses.pop("features")
                 _, static_log_vars = self._parse_losses(static_losses, mode=self.current_weight)

@@ -20,13 +20,15 @@ from mmcv.runner import load_checkpoint
 from mmseg import __version__
 
 #!DEBUG
-# from mmseg.apis import set_random_seed, train_segmentor
-from run_experiments import CUSTOM
-if CUSTOM:
-    from mmseg.apis import set_random_seed
-    from mmseg.apis import train_segmentor_sup as train_segmentor
-else:
-    from mmseg.apis import set_random_seed, train_segmentor
+from mmseg.apis import set_random_seed, train_segmentor
+# ----- below is for supervised encoder training (train_segmentor_sup)
+# from run_experiments import CUSTOM
+# if CUSTOM:
+#     from mmseg.apis import set_random_seed
+#     from mmseg.apis import set_random_seed, train_segmentor
+#     # from mmseg.apis import train_segmentor_sup as train_segmentor
+# else:
+#     from mmseg.apis import set_random_seed, train_segmentor
 
 from mmseg.datasets import build_dataset
 from mmseg.models.builder import build_train_model
@@ -93,7 +95,8 @@ def main(args):
 
     a=1
     from run_experiments import CUSTOM
-    if CUSTOM: cfg["custom"] = cfg["uda"].copy()
+    if CUSTOM:
+        cfg["custom"] = cfg["uda"].copy()
 
     # work_dir is determined in this priority: CLI > segment in file > filename
     if args.work_dir is not None:
@@ -171,14 +174,6 @@ def main(args):
         logger.info('Init weights using a warmup model')
     else:
         logger.info('Init weights using a warmup model')
-    
-    # # ----- Build CLIP Model (custom)
-    # from clipseg.models.clipseg import CLIPDensePredT
-    # model = CLIPDensePredT(version='ViT-B/16', reduce_dim=64)
-    # # model.eval() #Freeze -> ?
-    # # model.load_state_dict(torch.load('weights/rd64-uni.pth', map_location=torch.device('cpu')), strict=False)
-    # model.load_state_dict(torch.load('clipseg/weights/rd64-uni.pth', map_location=torch.device('cpu')), strict=False)
-    # # -----
 
     logger.info(model)
 

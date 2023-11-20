@@ -1,3 +1,4 @@
+
 datasets = [
     ("cityscapes", "rain"),
     # ('shift', 'shift'),
@@ -9,7 +10,8 @@ domain_order = [
 num_epochs = 3
 
 models = [
-    ("segformer", "mitb1"),
+    # ("segformer", "mitb1"),
+    ("segformer", "mitb5")
 ]
 udas = [
     "dacs_online", # Hamlet UDA
@@ -35,7 +37,7 @@ lr_far_domain = [
 train = True
 
 modular_training = [
-    True,
+    False,
 ]
 training_policy = [  # options True:['MAD_UP', 'RANDOM', 1]
     "MAD_UP",
@@ -67,7 +69,7 @@ mad_time_update = [
 ]
 
 domain_indicator = [
-    True,
+    False,
 ]
 
 dynamic_dacs = [
@@ -92,7 +94,8 @@ iters = 40000
 modules_update = "random_modules/online_random.npy"
 # pretrained_segmentator = "pretrained/mitb1_uda.pth"
 # pretrained_segmentator = "pretrained/segformer.b1.512x512.ade.160k.pth"
-pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
+# pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
+pretrained_segmentator = "work_dirs/local-exp-1/231112_1839_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_dc236/new_epoch_10.pth"
 student_pretrained = pretrained_segmentator
 
 seed = [0]

@@ -50,6 +50,11 @@ def train_segmentor(
     # prepare data loaders
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
 
+    a=1
+    if False: #!DEBUG
+        for param in model.model.backbone.parameters():
+            param.requires_grad = False
+
     if "video" in cfg["mode"]:
         data_loaders = [
             build_dataloader(
@@ -220,7 +225,8 @@ def train_segmentor(
 
     # register eval hooks
     if validate:
-        samples = 1
+        # samples = 1
+        samples = 8 #!DEBUG
         if "online" in cfg:
             val_datasets = [build_dataset(val) for val in cfg.online.val]
             val_dataloader = [

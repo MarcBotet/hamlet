@@ -1,3 +1,13 @@
+
+# 231103
+## 베이스라인
+    - 231103_1729_cs2rain_dacs_online_rcs001_cpl_segformer_mitb1_fixed_s0_96cf4
+        - domain_detector True
+    - 231106_1036_cs2rain_dacs_online_rcs001_cpl_segformer_mitb1_fixed_s0_b4e8c
+    - 231106_1038_cs2rain_dacs_online_rcs001_cpl_segformer_mitb1_fixed_s0_46eca
+    - 231106_1506_cs2rain_dacs_online_rcs001_cpl_segformer_mitb1_fixed_s0_885f2
+
+
 # 231109
 
 ## 구현 및 변경사항
@@ -70,7 +80,6 @@
         - 그렇다면 mit b1 세팅에서 OSFH를 쓰면 될려나?
         - OriginalSegFormerHead : 연결안됨
 
-
 * `mmseg/apis/train_sup.py`
     1) (옵션 선택) `tools/train.py`
         ```
@@ -83,6 +92,7 @@
         else:
             from mmseg.apis import set_random_seed, train_segmentor
         ```
+        즉 train_segmentor_sup을 쓰면 decoder training만 되도록 구현해놓음
     2) Encoder freeze
         ```
         for param in model.model.backbone.parameters():
@@ -119,12 +129,120 @@
 
 
 # 231112
-* 
+* CustomDACS
+    ```
+    DACS를 쓰되, backbone으로 Pretrained Foundational Encoder 끼우기?
+    DACS 소스코드: https://github.com/vikolss/DACS
+    지금 DACS 클래스가 ModularUDADecorator를 상속하고있기는 하지만, 필연적으로 Modular해야할 필요는 없는 거잖아?
+    그럼 CustomDACS 클래스에서 Modular한 부분을 빼면 쓸수있지 않을까?
+    근데 지금 세팅에서 CustomDACS를 불러올 수가 있나??
+    ```
+
+UDADecorator
+get_model
+extract_feat
+encode_decode
+forward_train
+inference
+simple_test
+aug_test
+
+ModularUDADecorator
+freeze_or_not_modules
+get_mad_info
+get_main_model
+get_training_policy
+is_mad_training
+
+OtherDecorator
+get_main_model
+
+DACS
+get_ema_model
+get_imnet_model
+...
+
+=> DACS에서 model, ema_model, imnet_model 셋다 build_segmentator를 가지고 선언하고 있음
+cfg["model"] 을 잘 만들어야함 -> 기존에 만들어져있는 configs/_base_/models/segformer_b5.py 파일 활용
+
+EncoderDecoder랑 OtherEncoderDecoder랑 대단한 차이가 없음
+
+필요없는 arguments:
+    - total_modules
+    - modular_training
+    - training_policy
+    - loss_weight (?)
+    - num_module
+    - modules_update
+    - batchnorm (?)
+    - alpha (?)
+    - mad_time_update
+    - temperature (?)
+
+CustomDACS 일단 돌돌 돌게 만들기
+돌돌 돌아가긴하는데 CustomDACS의 self.student_teacher_logs()가 실행 x
+SegFormerHead가 IncrementalDecodeHead를 상속하기 때문인데 이게 Modular이랑 관련이 있는지 없는지는 확인 필요
+오리지널 SegFormer 코드에 없는걸 보니 hamlet 팀에서 구현한 클래스인듯
+얘는 OthersEncoderDecoder랑 호환안됨 ㅠ
+
+B5 with OthersEncoderDecoder 테스트:
+- 231112_1835_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_1dad4
+    - lr 0.000015
+- 231112_1839_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_dc236
+    - lr 0.00015
+얘네 encoder freeze 안됐다 ㅋㅋ ;;
+
+Encoder freeze 하고 다시 실험
+- 231113_1219_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_251ee
+    - lr 0.00015
+
+# 231113
+아놔
+코딩 일부러 이따위로했나?
+
+좀 써놓든가요;;
+
+내가 가진 의문이 뭐냐면 이론상 모든 에폭마다 소스에 대해서는 계속 모델 업데이트가 이루어짐 (이건 질문을 해보니까 Replay Buffer라고함;;)
+따라서 모든 데이터셋이 소스와 타겟을 하나씩 제공해줘야됨
+근데 CityScapes라는 데이터셋의 getitem을 봐도 img, gt만 반환하지 그렇게 생긴 애가 아닌것임?
+그래서 도당체 11번의 test를 하는동안 소스는 어디서 나오는지가 궁금했음
+
+결론적으로 이론상 데이터셋을 어떻게 쓰고있냐면
+일단 datasets라는 리스트에 다음 순서대로 총 12개 데이터셋들을 넣어놓음:
+(소스, SourceDataset), (소스, CityscapesDataset), (25mm, CityscapesDataset), ..., (25mm, CityscapesDataset), (소스, CityscapesDataset)
+
+이론상 이 시스템은 OnlineRunner라는 애를 만들어놓고 여기에서 training 과정을 수행하는데
+이 OnlineRunner를 선언할때 이 datasets 리스트에서 0번째 element를 pop 해다가 source_dataloader이라는 이름으로 OnlineRunner에 집어넣고
+그리고나서 전체 과정을 시작하는것임! 그리고 출력되는건 아마 순서대로? next를 쓰고있는걸보니 그런거같음
+이걸왜 숨겨놓냐 ㅅㅂㄹ...
+
+source free uda가 아님
+
+# 231114
+
+231114_0303_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_91188
+- b5 originalsegformerhead 학습된거 실험
+- 근데 왜 val 칼럼명이 다르지?
+
+## 구현 및 변경사항
+* `mmseg/core/evaluation/eval_hooks.py`
+```
+or (
+    runner.model_name == "DACS"
+    and runner.model.module.model_type == "OthersEncoderDecoder"
+)
+```
+이거 변경하고 다시 실험
+- 231114_1623_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_a34b1
 
 
+# 231120
+## 구현 및 변경사항
+* `config/__base__/dataset/rain_25mm.py` 등등
+    - val 데이터셋 경로 설정 별도로 해줘야함
 
-
-
+## Todo
+* 인코더 freeze config에서 옵셔널하게 선택할 수 있도록 구현
 
 
 

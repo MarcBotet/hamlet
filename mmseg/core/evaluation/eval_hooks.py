@@ -363,6 +363,10 @@ class OnlineEvalHook(_EvalHook):
                 runner.model_name == "DACS"
                 and runner.model.module.model_type == "ModularEncoderDecoder"
             )
+            or (
+                runner.model_name == "DACS"
+                and runner.model.module.model_type == "OthersEncoderDecoder"
+            )
         ):
             main_results = runner.model.module.get_main_model()
             dataset_name = "unknown" if dataset_name is None else dataset_name

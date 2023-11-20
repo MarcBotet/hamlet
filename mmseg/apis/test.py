@@ -113,7 +113,7 @@ def single_gpu_test(
                     imgs = tensor2imgs(img_tensor, **img_metas[0]["img_norm_cfg"])
                     assert len(imgs) == len(img_metas)
 
-                    for img, img_meta in zip(imgs, img_metas):
+                    for idx, (img, img_meta) in enumerate(zip(imgs, img_metas)):
                         h, w, _ = img_meta["img_shape"]
                         img_show = img[:h, :w, :]
 
@@ -140,9 +140,11 @@ def single_gpu_test(
 
                         Path(osp.dirname(out_file)).mkdir(parents=True, exist_ok=True)
 
+                        _result = [result[idx]]
                         img_pred = model.module.show_result(
                             img_show,
-                            result,
+                            _result,
+                            # result,
                             palette=dataset.PALETTE,
                             show=False,
                             out_file=None,

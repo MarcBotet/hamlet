@@ -87,3 +87,9 @@ class OriginalSegFormerHead(BaseDecodeHead):
         x = self.linear_pred(x)
 
         return x
+
+    #!DEBUG
+    def calculate_entropy(self, inputs):
+        seg_logits = self.forward(inputs)
+        probs = torch.nn.functional.softmax(seg_logits, dim=1)
+        return self.entropy(probs).item(), self.confidence(probs).item()

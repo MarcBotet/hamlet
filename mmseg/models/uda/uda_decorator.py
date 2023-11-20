@@ -146,9 +146,9 @@ class OtherDecorator(UDADecorator):
 
 class CustomUDADecorator(UDADecorator):
     def __init__(self, **cfg):
-        super(CustomUDADecorator, self).__init__(cfg)
+        super(CustomUDADecorator, self).__init__(**cfg)
 
-        self.model_type = cfg["model"]["type"] #?
+        self.model_type = cfg["model"]["type"]
         if "segmentator_pretrained" in cfg:
             checkpoint = load_checkpoint(
                 self.model, cfg["student_pretrained"], map_location="cpu"
@@ -158,5 +158,5 @@ class CustomUDADecorator(UDADecorator):
 
 
     def get_main_model(self):
-        return self.get_model().get_main_model()
+        return self.get_model() #.get_main_model()
 
