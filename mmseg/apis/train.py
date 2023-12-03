@@ -16,6 +16,7 @@ from mmseg.core import DistEvalHook, EvalHook, OnlineEvalHook
 from mmseg.core.ddp_wrapper import DistributedDataParallelWrapper
 from mmseg.core.evaluation.eval_hooks import ShiftEvalHook, VideoEvalHook
 from mmseg.datasets import build_dataloader, build_dataset
+from mmseg.models.utils import freeze #!DEBUG
 from mmseg.utils import get_root_logger
 from online_src.online_runner import OnlineRunner
 from online_src.others_runner import OthersRunner
@@ -51,9 +52,10 @@ def train_segmentor(
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
 
     a=1
-    if False: #!DEBUG
-        for param in model.model.backbone.parameters():
-            param.requires_grad = False
+    if cfg["freeze_backbone"]: #!DEBUG
+        freeze(model.model.backbone)
+        # for param in model.model.backbone.parameters():
+        #     param.requires_grad = False
 
     if "video" in cfg["mode"]:
         data_loaders = [
@@ -225,8 +227,7 @@ def train_segmentor(
 
     # register eval hooks
     if validate:
-        # samples = 1
-        samples = 8 #!DEBUG
+        samples = 1
         if "online" in cfg:
             val_datasets = [build_dataset(val) for val in cfg.online.val]
             val_dataloader = [

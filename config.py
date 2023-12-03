@@ -101,3 +101,5 @@ student_pretrained = pretrained_segmentator
 seed = [0]
 perfect_determinism = False
 deterministic = False
+
+freeze_backbone = False #!DETERMINED

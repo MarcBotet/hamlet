@@ -28,9 +28,16 @@ def get_model_base(architecture, backbone):
         else:
             return f"_base_/models/{architecture}_mitb5.py"
 
-    if "upernet" in architecture and "mit" in backbone:
-        return f"_base_/models/{architecture}_mit.py"
+    # if "upernet" in architecture and "mit" in backbone:
+    #     return f"_base_/models/{architecture}_mit.py"
+    if "upernet" in architecture:
+        if "mit" in backbone:
+            return f"_base_/models/{architecture}_mit.py"
+        if "swin" in backbone:
+            return f"_base_/models/{architecture}_swin.py"
+
     assert "mit" not in backbone or "-del" in backbone
+
     return {
         "dlv2": "_base_/models/deeplabv2_r50-d8.py",
         "dlv2red": "_base_/models/deeplabv2red_r50-d8.py",
@@ -54,6 +61,8 @@ def get_pretraining_file(backbone):
         return "pretrained/mit_b1.pth"
     if "mitb0" in backbone:
         return "pretrained/mit_b0.pth"
+    if "swin" in backbone:
+        return "pretrained/upernet_swin_tiny_patch4_window7_512x512.pth"
     if "r101v1c" in backbone:
         return "open-mmlab://resnet101_v1c"
     return {
@@ -73,6 +82,8 @@ def get_backbone_cfg(backbone):
             return dict(type=f"mit_b{i}")
         if backbone == f"mitb{i}-del":
             return dict(_delete_=True, type=f"mit_b{i}")
+    if backbone == "swin":
+        return dict(type="SwinTransformer")
     return {
         "r50v1c": {"depth": 50},
         "r101v1c": {"depth": 101},
@@ -187,6 +198,10 @@ def generate_experiment_cfgs(id):
 
         # this is for warmup target or source
         cfg["segmentator_pretrained"] = pretrained_segmentator
+
+        #!DEBUG
+        cfg["freeze_backbone"] = freeze_backbone
+        a=1
 
         # Setup UDA config
         cfg["wandb_project"] = "Hamlet"
@@ -339,13 +354,13 @@ def generate_experiment_cfgs(id):
         )
         cfg["optimizer"] = {"lr": lr}
         cfg["optimizer"].setdefault("paramwise_cfg", {})
-        cfg["optimizer"]["paramwise_cfg"].setdefault("custom_keys", {})
-        opt_param_cfg = cfg["optimizer"]["paramwise_cfg"]["custom_keys"]
-        if pmult:
-            opt_param_cfg["head"] = dict(lr_mult=10.0)
-        if "mit" in backbone:
-            opt_param_cfg["pos_block"] = dict(decay_mult=0.0)
-            opt_param_cfg["norm"] = dict(decay_mult=0.0)
+        # cfg["optimizer"]["paramwise_cfg"].setdefault("custom_keys", {})
+        # opt_param_cfg = cfg["optimizer"]["paramwise_cfg"]["custom_keys"]
+        # if pmult: #!DEBUG
+        #     opt_param_cfg["head"] = dict(lr_mult=10.0)
+        # if "mit" in backbone:
+        #     opt_param_cfg["pos_block"] = dict(decay_mult=0.0)
+        #     opt_param_cfg["norm"] = dict(decay_mult=0.0)
 
         # Setup runner
         if "online" in uda:
@@ -527,6 +542,8 @@ def generate_experiment_cfgs(id):
     iters = 40000  # Not relevant for online training
     seed = 0
 
+    freeze_backbone = False #!DETERMINED
+
     # -------------------------------------------------------------------------
     # Config experiments:
     # -------------------------------------------------------------------------
@@ -579,6 +596,10 @@ def generate_experiment_cfgs(id):
         epoch_num = config.num_epochs
 
         mode_train = config.train
+
+        #!DEBUG
+        freeze_backbone = config.freeze_backbone
+        pmult = config.pmult
 
         if config.modules_update is not None:
             modules_update = config.modules_update

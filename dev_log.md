@@ -240,9 +240,168 @@ or (
 ## 구현 및 변경사항
 * `config/__base__/dataset/rain_25mm.py` 등등
     - val 데이터셋 경로 설정 별도로 해줘야함
+    - baseline 실험 __231120_1314_cs2rain_dacs_online_rcs001_cpl_segformer_mitb1_fixed_s0_01ecf__
+
+* 백본 freeze: config에서 옵셔널하게 선택할 수 있도록 구현
+    - 다음 4가지 파일 모두에서 freeze_backbone 옵션 생성해야 함
+        - config.py
+        - config_custom.py
+        - experiments.py
+        - experiments_custom.py
+    - `mmseg/api/train.py`
+        - train_segmentor 함수에서 cfg["freeze_backbone"] 플래그 활용해서 백본 프리즈 여부 컨트롤
+        ```
+        if cfg["freeze_backbone"]: #!DEBUG
+            for param in model.model.backbone.parameters():
+                param.requires_grad = False
+
+        ```
+
+* OthersEncoderDecoder 활용시 EvalHook에서 제대로된 스코어 출력하도록 구현
+    - 이상하게되는 실험 시리얼: 231120_1333_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_1867a
+    - 보니까 ModularEncoder에서 main_model은 num_modules를 가리킴 (이거 왜 이렇게 돼있는거임? ;;)
+    - 근데 OthersEncoderDecoder은 진짜로 main_model을 반환했음
+    - EvalHook.evaluate() 부분에 OthersEncoderDecoder 옵셔널하게 사용하도록 별도로 if 분기를 만듦
+
+* freeze_backbone 구현하고 다시 b5 실험
+    - OthersEncoderDecoder, DACS
+    - freeze_backbone = True
+    - BACKBONE FROZEN: __231120_1917_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_d5f7a__
+    - BACKBONE MELT: __231121_1108_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_dad32__
 
 ## Todo
-* 인코더 freeze config에서 옵셔널하게 선택할 수 있도록 구현
+* SwinTransformer 백본 합치기
+
+# 231122
+* SwinTransformer 백본 합치기
+
+## 구현 및 변경사항
+* `experiments_custom.py`
+    - get_model_base
+    - get_pretraining_file
+    - get_backbone_cfg
+
+아직 덜함
+
+# 231123
+* MixTransformer에 Adapter 붙이기 (1)
+    - B2~B5에 붙여보자
+    - Adapter from AdaptFormer? LoRA?
+    - EMA가 필요한가????
+    - Mix Transformer는 ViT랑 달리 매 layer마다 embedding dimension이 다르다
+    - 뭔가 adapter를 가지고있는 wrapper 같은게 필요할 거 같기도?
+
+# 231124
+* MixTransformer에 Adapter 붙이기 (2)
+    - LAE 논문 및 코드베이스 참고
+        ```
+        Adapter is a smll module that an be inserted to any layer of the pre-trained model. As shown in Fig. 2(b), the adapter is generally a residual block composed of a down-projection with parameters W_down, a nonlinear activation function sigmoid(), and an up-projection with parameters W_up. The two projections can be convolution for CNN or linear layers for Transformer architectures, respectively.
+        ```
+
+    - Adapter 붙이니까 `some parameters appear in more than one parameter group` 에러 다시 뜸
+        ```
+        cfg["optimizer"]["paramwise_cfg"].setdefault("custom_keys", {})
+        opt_param_cfg = cfg["optimizer"]["paramwise_cfg"]["custom_keys"]
+        if pmult: #!DEBUG
+            opt_param_cfg["head"] = dict(lr_mult=10.0)
+        if "mit" in backbone:
+            opt_param_cfg["pos_block"] = dict(decay_mult=0.0)
+            opt_param_cfg["norm"] = dict(decay_mult=0.0)
+        ```
+        - 요 라인 때문에 생기는 거 같은데 정확히 어떻게 구현되는지 몰라서 일단 주석처리하고 진행
+        - cfg["optimizer"]["paramwise_cfg"] 이게 빈 딕셔너리여야 함
+    
+    - forward_feature 함수 변경
+    - 현재 student, teacher, imnet-teacher 모두 adapter 붙는 구조인데 이거 바꿔야함
+
+
+# 231201
+## Recap
+* SegFormer Mix Transformer 구조 관련
+    - `depth`: 하나의 Stage에서 transformer block이 몇 번 반복되는지
+
+## 구현 및 변경사항
+* AdaptFormer처럼 Adapter 구현
+    - Done
+* Backbone Freeze 명확히 하기
+    - Adapter, Decoder Head 만 requires_grad True
+
+## 실험
+* __231201_1832_cs2rain_dacs_online_rcs001_cpl_segformer_mitb5_fixed_s0_220a1__
+    - Adapter, decoder head만 업데이트
+    - 다른 세팅은 모두 동일
+
+## Todo
+* Decoder Head도 pretrained weights 붙일 수 있게 하기
+
+* Static Teacher 없애버리기
+    -  `configs/_base_/uda/dacs_a999_fdthings.py` 에서 imnet_feature_dist_lambda를 0으로 설정하면 imnet_head 뺄수있음
+    - 근데 이 옵션이 구현은 안돼있음 개뿍침
+
+
+
+
+# 231203
+
+## 구현 및 변경사항
+* 자꾸 OOM 에러가 발생해서 B5 대신 B3 세팅으로 진행
+    - __231203_1147_cs2rain_dacs_online_rcs001_cpl_segformer_mitb3_fixed_s0_77b88__
+        - imnet fdist 옵션 구현해서 실험
+    - ??
+        - imnet fdist 켜서 실험
+    - 생각해보니 test time batch size를 8로 했던거 같음
+    - 그리고 show_result 옵션도 꺼야겠다
+
+* `mmseg/core/evaluation/eval_hooks.py`
+    - show_result 옵션 끄기
+        ```
+            from mmseg.apis import single_gpu_test
+
+            for dataloader in self.dataloaders:
+                dataset_name = dataloader.dataset.name
+                results = single_gpu_test(
+                    runner.model,
+                    dataloader,
+                    # show=True,
+                    show=False,
+                    out_dir=self.work_dir,
+                    num_epoch=runner.iter,
+                    dataset_name=dataset_name,
+                    img_to_pred=self.img_to_pred,
+                    efficient_test=self.efficient_test,
+                )
+                self.evaluate(dataloader, runner, results, dataset_name)
+                # ugly way to ensure ram does not crash having multiple val datasets
+                gc.collect()
+
+        ```
+* `mmseg/apis/train.py`
+    - test time batch size 8->1
+        ```
+            # register eval hooks
+            if validate:
+                samples = 1
+                # samples = 8 #!DEBUG
+                if "online" in cfg:
+                    val_datasets = [build_dataset(val) for val in cfg.online.val]
+                    val_dataloader = [
+                        build_dataloader(
+                            ds,
+                            samples_per_gpu=samples,
+                            workers_per_gpu=cfg.data.workers_per_gpu,
+                            dist=distributed,
+                            shuffle=False,
+                        )
+                        for ds in val_datasets
+                    ]
+                    eval_hook = OnlineEvalHook
+                    eval_hook = eval_hook if "video" not in cfg["mode"] else VideoEvalHook
+        ```
+
+* block 1>4 -> 1>2
+
+
+
 
 
 

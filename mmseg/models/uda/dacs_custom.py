@@ -478,7 +478,10 @@ class DACS(CustomUDADecorator):
         self.get_model().train()
 
         # backward pass
-        (clean_loss + feat_loss + mix_loss).backward()
+        if self.enable_fdist:
+            (clean_loss + feat_loss + mix_loss).backward()
+        else:
+            (clean_loss + mix_loss).backward()
 
         # if not self.benchmark and self.local_iter % 20 == 0: #!DEBUG
         if not self.benchmark and self.local_iter % self.debug_img_interval == 0:

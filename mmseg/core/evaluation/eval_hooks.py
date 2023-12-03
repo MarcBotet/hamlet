@@ -325,7 +325,8 @@ class OnlineEvalHook(_EvalHook):
             results = single_gpu_test(
                 runner.model,
                 dataloader,
-                show=True,
+                # show=True,
+                show=False,
                 out_dir=self.work_dir,
                 num_epoch=runner.iter,
                 dataset_name=dataset_name,
@@ -363,10 +364,6 @@ class OnlineEvalHook(_EvalHook):
                 runner.model_name == "DACS"
                 and runner.model.module.model_type == "ModularEncoderDecoder"
             )
-            or (
-                runner.model_name == "DACS"
-                and runner.model.module.model_type == "OthersEncoderDecoder"
-            )
         ):
             main_results = runner.model.module.get_main_model()
             dataset_name = "unknown" if dataset_name is None else dataset_name
@@ -376,6 +373,23 @@ class OnlineEvalHook(_EvalHook):
             )
             for name, val in eval_res.items():
                 runner.log_buffer.output[f"{dataset_name}.decode_{main_results}.{name}"] = val
+                runner.log_buffer.output[f"{dataset_name}.{name}"] = val
+            runner.log_buffer.output[f"target_domain"] = runner.data_loader.dataset.domain
+
+            runner.log_buffer.ready = True
+
+        #!DEBUG
+        elif (
+                runner.model_name == "DACS"
+                and runner.model.module.model_type == "OthersEncoderDecoder"
+        ):
+            dataset_name = "unknown" if dataset_name is None else dataset_name
+
+            eval_res = dataloader.dataset.evaluate(
+                results, logger=runner.logger, **self.eval_kwargs
+            )
+            for name, val in eval_res.items():
+                runner.log_buffer.output[f"{dataset_name}.decode_4.{name}"] = val
                 runner.log_buffer.output[f"{dataset_name}.{name}"] = val
             runner.log_buffer.output[f"target_domain"] = runner.data_loader.dataset.domain
 

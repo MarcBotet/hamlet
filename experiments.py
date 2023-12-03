@@ -186,6 +186,9 @@ def generate_experiment_cfgs(id):
         # this is for warmup target or source
         cfg["segmentator_pretrained"] = pretrained_segmentator
 
+        #!DEBUG
+        cfg["freeze_backbone"] = freeze_backbone
+
         # Setup UDA config
         cfg["wandb_project"] = "Hamlet"
         cfg["mode"] = uda
@@ -525,6 +528,8 @@ def generate_experiment_cfgs(id):
     iters = 40000  # Not relevant for online training
     seed = 0
 
+    freeze_backbone = False #!DETERMINED
+
     # -------------------------------------------------------------------------
     # Config experiments:
     # -------------------------------------------------------------------------
@@ -577,6 +582,9 @@ def generate_experiment_cfgs(id):
         epoch_num = config.num_epochs
 
         mode_train = config.train
+
+        #!DEBUG
+        freeze_backbone = config.freeze_backbone
 
         if config.modules_update is not None:
             modules_update = config.modules_update

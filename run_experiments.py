@@ -15,8 +15,10 @@ CUSTOM = True
 
 from mmcv import Config, get_git_hash
 
-from mmseg.apis import set_random_seed
+# from mmseg.apis import set_random_seed
 from tools import train
+
+DEBUG = False
 
 
 def run_command(command):
@@ -71,8 +73,6 @@ if __name__ == "__main__":
     JOB_DIR = "jobs"
     cfgs, config_files = [], []
 
-    if args.custom == 0: CUSTOM = False
-
     # Training with Predefined Config
     if args.config is not None:
         cfg = Config.fromfile(args.config)
@@ -119,6 +119,8 @@ if __name__ == "__main__":
                     f'{datetime.now().strftime("%y%m%d_%H%M")}_'
                     f'{cfg["name"]}_{str(uuid.uuid4())[:5]}'
                 )
+                if DEBUG:
+                    cfg["name"] = f"debug_{cfg['name']}"
                 cfg["work_dir"] = os.path.join("work_dirs", exp_name, cfg["name"])
                 cfg["git_rev"] = get_git_hash()
                 tags = cfg["tags"].copy()

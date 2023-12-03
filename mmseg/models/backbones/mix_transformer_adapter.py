@@ -17,6 +17,8 @@ from mmcv.runner import BaseModule, _load_checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
 from mmseg.models.builder import BACKBONES
+from mmseg.models.pet import Adapter, KVLoRA
+from mmseg.models.pet_mixin import AdapterMixin
 from mmseg.utils import get_root_logger
 
 
@@ -47,7 +49,7 @@ class Mlp(nn.Module):
         return x
 
 
-class Attention(nn.Module):
+class Attention(nn.Module, AdapterMixin):
 
     def __init__(self,
                  dim,
@@ -61,10 +63,10 @@ class Attention(nn.Module):
         assert dim % num_heads == 0, f'dim {dim} should be divided by ' \
                                      f'num_heads {num_heads}.'
 
-        self.dim = dim
-        self.num_heads = num_heads
-        head_dim = dim // num_heads
-        self.scale = qk_scale or head_dim**-0.5
+        self.dim = dim                              #512
+        self.num_heads = num_heads                  #8
+        head_dim = dim // num_heads                 #64
+        self.scale = qk_scale or head_dim**-0.5     #8
 
         self.q = nn.Linear(dim, dim, bias=qkv_bias)
         self.kv = nn.Linear(dim, dim * 2, bias=qkv_bias)
@@ -108,7 +110,7 @@ class Attention(nn.Module):
         return x
 
 
-class Block(nn.Module):
+class Block(nn.Module, AdapterMixin):
 
     def __init__(self,
                  dim,
@@ -145,8 +147,20 @@ class Block(nn.Module):
             drop=drop)
 
     def forward(self, x, H, W):
-        x = x + self.drop_path(self.attn(self.norm1(x), H, W))
-        x = x + self.drop_path(self.mlp(self.norm2(x), H, W))
+        a=1
+        # # ----- original code -----
+        # x = x + self.drop_path(self.attn(self.norm1(x), H, W))
+        # x = x + self.drop_path(self.mlp(self.norm2(x), H, W))
+        # # -------------------------
+
+        # kwargs = {"Adapter": [H, W]}
+        kwargs = {"H": H, "W": W}
+        # kwargs = {}
+
+        x = x + self.drop_path(self.attn(self.norm1(x), H, W)) # MSA
+        x = x + self.drop_path(
+            self.adapt_module("mlp", self.norm2(x), **kwargs)  # MLP in AdaptFormer
+        )
 
         return x
 
@@ -190,6 +204,8 @@ class OverlapPatchEmbed(nn.Module):
 class MixVisionTransformer(BaseModule):
 
     def __init__(self,
+
+                 #default
                  img_size=224,
                  patch_size=16,
                  in_chans=3,
@@ -208,7 +224,14 @@ class MixVisionTransformer(BaseModule):
                  style=None,
                  pretrained=None,
                  init_cfg=None,
-                 freeze_patch_embed=False):
+                 freeze_patch_embed=False,
+
+                 #pet
+                 adapt_blocks=[0, 1, 2, 3],
+                 pet_cls:str="Adapter",
+                #  pet_kwargs={"rank": 5, "scale": None},
+                 pet_kwargs={"scale": None},
+                 **cfg):
         super().__init__(init_cfg)
 
         assert not (init_cfg and pretrained), \
@@ -220,6 +243,7 @@ class MixVisionTransformer(BaseModule):
             raise TypeError('pretrained must be a str or None')
 
         self.num_classes = num_classes
+        self.embed_dims = embed_dims #!DEBUG
         self.depths = depths
         self.pretrained = pretrained
         self.init_cfg = init_cfg
@@ -321,9 +345,17 @@ class MixVisionTransformer(BaseModule):
         self.norm4 = norm_layer(embed_dims[3])
         a=1
 
-        # classification head
-        # self.head = nn.Linear(embed_dims[3], num_classes) \
-        #     if num_classes > 0 else nn.Identity()
+        #!DEBUG (order matters)
+        self.adapt_blocks = adapt_blocks
+        self.pet_cls = pet_cls
+        self.pet_kwargs = pet_kwargs
+
+        # self.pets_emas = nn.ModuleList([])
+        self.pets = self.create_pets()
+        # logger
+
+        self.attach_pets_mit()
+
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -406,6 +438,7 @@ class MixVisionTransformer(BaseModule):
                         p.requires_grad = requires_grad
 
     def forward_features(self, x, modules):
+        a=1
         B = x.shape[0]
         outs = []
 
@@ -455,6 +488,64 @@ class MixVisionTransformer(BaseModule):
         return x
 
 
+    def create_pets(self):
+        return self.create_pets_mit()
+
+    def create_pets_mit(self):
+        assert self.pet_cls in ["Adapter", "LoRA", "Prefix"], "ERROR 1"
+
+        n = len(self.adapt_blocks)
+        embed_dims = self.embed_dims
+        depths = self.depths
+
+        assert len(embed_dims) == n, "ERROR 2"
+
+        if self.pet_cls == "Adapter":
+            adapter_list_list = []
+            for idx, embed_dim in enumerate(embed_dims):
+                adapter_list = []
+                for _ in range(depths[idx]):
+                    kwargs = dict(**self.pet_kwargs)
+                    kwargs["embed_dim"] = embed_dim
+                    # adapter_list.append(Adapter(**kwargs))
+                    adapter_list.append(Adapter(**kwargs))
+                adapter_list_list.append(nn.ModuleList(adapter_list))
+            a=1
+            # return nn.ModuleList(adapter_list)
+            return adapter_list_list
+
+        if self.pet_cls == "LoRA":
+            lora_list = []
+            for idx, embed_dim in enumerate(embed_dims):
+                kwargs = dict(**self.pet_kwargs)
+                kwargs["in_features"] = embed_dim
+                kwargs["out_features"] = embed_dim
+                lora_list.append(KVLoRA(**kwargs))
+            return nn.ModuleList(lora_list)
+    
+    def attach_pets_mit(self):
+        assert self.pet_cls in ["Adapter", "LoRA", "Prefix"], "ERROR 1"
+
+        pets = self.pets
+        a=1
+
+        if self.pet_cls == "Adapter":
+            for _dim_idx, _dim in enumerate(self.embed_dims):
+                for _depth_idx in range(self.depths[_dim_idx]):
+                    # print(f"self.block{_dim_idx + 1}[{_depth_idx}].attach_adapter(mlp=pets[{_dim_idx}][{_depth_idx}])")
+
+                    # _block = getattr(self, f"block{_dim_idx + 1}")
+                    # _block[_depth_idx].attach_adapter(attn=pets[_dim_idx]) #inline
+
+                    eval(f"self.block{_dim_idx + 1}")[_depth_idx].attach_adapter(mlp=pets[_dim_idx][_depth_idx])
+            return
+
+        if self.pet_cls == "LoRA":
+            for i, b in enumerate(self.adapt_blocks):
+                a=1
+                eval(f"self.block{b}").attn.attch_adapter(qkv=pets[i])
+
+
 class DWConv(nn.Module):
 
     def __init__(self, dim=768):
@@ -470,97 +561,98 @@ class DWConv(nn.Module):
         return x
 
 
-# @BACKBONES.register_module()
-# class mit_b0(MixVisionTransformer):
+@BACKBONES.register_module()
+class mit_b0(MixVisionTransformer):
 
-#     def __init__(self, **kwargs):
-#         super(mit_b0, self).__init__(
-#             patch_size=4,
-#             embed_dims=[32, 64, 160, 256],
-#             num_heads=[1, 2, 5, 8],
-#             mlp_ratios=[4, 4, 4, 4],
-#             qkv_bias=True,
-#             norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#             depths=[2, 2, 2, 2],
-#             sr_ratios=[8, 4, 2, 1],
-#             **kwargs)
-
-
-# @BACKBONES.register_module()
-# class mit_b1(MixVisionTransformer):
-
-#     def __init__(self, **kwargs):
-#         super(mit_b1, self).__init__(
-#             patch_size=4,
-#             embed_dims=[64, 128, 320, 512],
-#             num_heads=[1, 2, 5, 8],
-#             mlp_ratios=[4, 4, 4, 4],
-#             qkv_bias=True,
-#             norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#             depths=[2, 2, 2, 2],
-#             sr_ratios=[8, 4, 2, 1],
-#             **kwargs)
+    def __init__(self, **kwargs):
+        super(mit_b0, self).__init__(
+            patch_size=4,
+            embed_dims=[32, 64, 160, 256],
+            num_heads=[1, 2, 5, 8],
+            mlp_ratios=[4, 4, 4, 4],
+            qkv_bias=True,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            depths=[2, 2, 2, 2],
+            sr_ratios=[8, 4, 2, 1],
+            **kwargs)
 
 
-# @BACKBONES.register_module()
-# class mit_b2(MixVisionTransformer):
+@BACKBONES.register_module()
+class mit_b1(MixVisionTransformer):
 
-#     def __init__(self, **kwargs):
-#         super(mit_b2, self).__init__(
-#             patch_size=4,
-#             embed_dims=[64, 128, 320, 512],
-#             num_heads=[1, 2, 5, 8],
-#             mlp_ratios=[4, 4, 4, 4],
-#             qkv_bias=True,
-#             norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#             depths=[3, 4, 6, 3],
-#             sr_ratios=[8, 4, 2, 1],
-#             **kwargs)
-
-
-# @BACKBONES.register_module()
-# class mit_b3(MixVisionTransformer):
-
-#     def __init__(self, **kwargs):
-#         super(mit_b3, self).__init__(
-#             patch_size=4,
-#             embed_dims=[64, 128, 320, 512],
-#             num_heads=[1, 2, 5, 8],
-#             mlp_ratios=[4, 4, 4, 4],
-#             qkv_bias=True,
-#             norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#             depths=[3, 4, 18, 3],
-#             sr_ratios=[8, 4, 2, 1],
-#             **kwargs)
+    def __init__(self, **kwargs):
+        super(mit_b1, self).__init__(
+            patch_size=4,
+            embed_dims=[64, 128, 320, 512],
+            num_heads=[1, 2, 5, 8],
+            mlp_ratios=[4, 4, 4, 4],
+            qkv_bias=True,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            depths=[2, 2, 2, 2],
+            sr_ratios=[8, 4, 2, 1],
+            **kwargs)
 
 
-# @BACKBONES.register_module()
-# class mit_b4(MixVisionTransformer):
+@BACKBONES.register_module()
+class mit_b2(MixVisionTransformer):
 
-#     def __init__(self, **kwargs):
-#         super(mit_b4, self).__init__(
-#             patch_size=4,
-#             embed_dims=[64, 128, 320, 512],
-#             num_heads=[1, 2, 5, 8],
-#             mlp_ratios=[4, 4, 4, 4],
-#             qkv_bias=True,
-#             norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#             depths=[3, 8, 27, 3],
-#             sr_ratios=[8, 4, 2, 1],
-#             **kwargs)
+    def __init__(self, **kwargs):
+        super(mit_b2, self).__init__(
+            patch_size=4,
+            embed_dims=[64, 128, 320, 512],
+            num_heads=[1, 2, 5, 8],
+            mlp_ratios=[4, 4, 4, 4],
+            qkv_bias=True,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            depths=[3, 4, 6, 3],
+            sr_ratios=[8, 4, 2, 1],
+            **kwargs)
 
 
-# @BACKBONES.register_module()
-# class mit_b5(MixVisionTransformer):
+@BACKBONES.register_module()
+class mit_b3(MixVisionTransformer):
 
-#     def __init__(self, **kwargs):
-#         super(mit_b5, self).__init__(
-#             patch_size=4,
-#             embed_dims=[64, 128, 320, 512],
-#             num_heads=[1, 2, 5, 8],
-#             mlp_ratios=[4, 4, 4, 4],
-#             qkv_bias=True,
-#             norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#             depths=[3, 6, 40, 3],
-#             sr_ratios=[8, 4, 2, 1],
-#             **kwargs)
+    def __init__(self, **kwargs):
+        super(mit_b3, self).__init__(
+            patch_size=4,
+            embed_dims=[64, 128, 320, 512],
+            num_heads=[1, 2, 5, 8],
+            mlp_ratios=[4, 4, 4, 4],
+            qkv_bias=True,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            depths=[3, 4, 18, 3],
+            sr_ratios=[8, 4, 2, 1],
+            **kwargs)
+
+
+@BACKBONES.register_module()
+class mit_b4(MixVisionTransformer):
+
+    def __init__(self, **kwargs):
+        super(mit_b4, self).__init__(
+            patch_size=4,
+            embed_dims=[64, 128, 320, 512],
+            num_heads=[1, 2, 5, 8],
+            mlp_ratios=[4, 4, 4, 4],
+            qkv_bias=True,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            depths=[3, 8, 27, 3],
+            sr_ratios=[8, 4, 2, 1],
+            **kwargs)
+
+
+@BACKBONES.register_module()
+class mit_b5(MixVisionTransformer):
+
+    def __init__(self, **kwargs):
+        super(mit_b5, self).__init__(
+            patch_size=4,
+            embed_dims=[64, 128, 320, 512],
+            num_heads=[1, 2, 5, 8],
+            mlp_ratios=[4, 4, 4, 4],
+            qkv_bias=True,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            depths=[3, 6, 40, 3],
+            sr_ratios=[8, 4, 2, 1],
+            **kwargs)
+        a=1

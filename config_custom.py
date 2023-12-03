@@ -6,12 +6,13 @@ datasets = [
 domain_order = [
     ["clear", "25mm", "50mm", "75mm", "100mm", "200mm"] + ["100mm", "75mm", "50mm", "25mm", "clear"]
 ]
-num_epochs = 10
+num_epochs = 3
 
-models = [
+models = [ # (architecture, backbone)
     # ("segformer", "mitb5_custom"),
     # ("segformer", "mitb1")
     ("segformer", "mitb5")
+    # ("upernet", "swin")
 ]
 udas = [
     "dacs_online", # Hamlet UDA
@@ -89,18 +90,25 @@ reduce_training = [
     (0.25, 0.75),
 ]
 
-batch_size = 4
+batch_size = 1
 iters = 40000
 
 # modules_update = "random_modules/random_[0.25, 0.25, 0.25, 0.25].npy"
 modules_update = "random_modules/online_random.npy"
-modules_update = None
+# modules_update = None
 # pretrained_segmentator = "pretrained/mitb5_uda.pth"
 # pretrained_segmentator = "pretrained/mit_b5.pth"
 # pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
+# pretrained_segmentator = "pretrained/segformer.b3.1024x1024.city.160k.pth"
 pretrained_segmentator = "pretrained/segformer.b5.1024x1024.city.160k.pth"      #segformer (evaluation)
+# pretrained_segmentator = "pretrained/upernet_swin_tiny_patch4_window7_512x512.pth"
 student_pretrained = pretrained_segmentator
 
 seed = [0]
 perfect_determinism = False
 deterministic = False
+
+#!DEBUG
+freeze_backbone = True
+pmult = False
+
