@@ -242,11 +242,14 @@ class MixVisionTransformer(BaseModule):
         self.init_cfg = init_cfg
 
         # PET
-        adapt_blocks = cfg["adapt_blocks"]
-        pet_cls = cfg["pet_cls"]
-        pet_kwargs = {"scale": None}
+        a=1
+        PET = hasattr(cfg, "adapt_blocks")
+        if PET:
+            adapt_blocks = cfg["adapt_blocks"]
+            pet_cls = cfg["pet_cls"]
+            pet_kwargs = {"scale": None}
 
-        self.embed_dims = [_dim for idx, _dim in enumerate(embed_dims) if idx in adapt_blocks]
+            self.embed_dims_adapter = [_dim for idx, _dim in enumerate(embed_dims) if idx in adapt_blocks]
 
         # patch_embed
         self.patch_embed1 = OverlapPatchEmbed(
@@ -344,16 +347,17 @@ class MixVisionTransformer(BaseModule):
         ])
         self.norm4 = norm_layer(embed_dims[3])
 
-        #!DEBUG (order matters)
-        self.adapt_blocks = adapt_blocks
-        self.pet_cls = pet_cls
-        self.pet_kwargs = pet_kwargs
+        if PET:
+            #!DEBUG (order matters)
+            self.adapt_blocks = adapt_blocks
+            self.pet_cls = pet_cls
+            self.pet_kwargs = pet_kwargs
 
-        # self.pets_emas = nn.ModuleList([])
-        self.pets = self.create_pets()
-        # logger
+            # self.pets_emas = nn.ModuleList([])
+            self.pets = self.create_pets()
+            # logger
 
-        self.attach_pets_mit()
+            self.attach_pets_mit()
 
 
     def _init_weights(self, m):
@@ -493,7 +497,7 @@ class MixVisionTransformer(BaseModule):
         assert self.pet_cls in ["Adapter", "LoRA", "Prefix"], "ERROR 1"
 
         n = len(self.adapt_blocks)
-        embed_dims = self.embed_dims
+        embed_dims = self.embed_dims_adapter
         depths = self.depths
 
         assert len(embed_dims) == n, "ERROR 2"
@@ -528,7 +532,7 @@ class MixVisionTransformer(BaseModule):
         a=1
 
         if self.pet_cls == "Adapter":
-            for _dim_idx, _dim in enumerate(self.embed_dims):
+            for _dim_idx, _dim in enumerate(self.embed_dims_adapter):
                 for _depth_idx in range(self.depths[_dim_idx]):
                     # print(f"self.block{_dim_idx + 1}[{_depth_idx}].attach_adapter(mlp=pets[{_dim_idx}][{_depth_idx}])")
 
