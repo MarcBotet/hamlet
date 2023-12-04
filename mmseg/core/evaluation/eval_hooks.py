@@ -320,14 +320,20 @@ class OnlineEvalHook(_EvalHook):
         self.first = False
         from mmseg.apis import single_gpu_test
 
+        from run_experiments import DEBUG
+        show = False
+        out_dir = None
+        if DEBUG:
+            show = True
+            out_dir = self.out_dir
+
         for dataloader in self.dataloaders:
             dataset_name = dataloader.dataset.name
             results = single_gpu_test(
                 runner.model,
                 dataloader,
-                # show=True,
-                show=False,
-                out_dir=self.work_dir,
+                show=show,
+                out_dir=out_dir,
                 num_epoch=runner.iter,
                 dataset_name=dataset_name,
                 img_to_pred=self.img_to_pred,
