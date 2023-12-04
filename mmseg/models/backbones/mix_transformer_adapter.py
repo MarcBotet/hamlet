@@ -225,12 +225,6 @@ class MixVisionTransformer(BaseModule):
                  pretrained=None,
                  init_cfg=None,
                  freeze_patch_embed=False,
-
-                 #pet
-                 adapt_blocks=[0, 1, 2, 3],
-                 pet_cls:str="Adapter",
-                #  pet_kwargs={"rank": 5, "scale": None},
-                 pet_kwargs={"scale": None},
                  **cfg):
         super().__init__(init_cfg)
 
@@ -241,12 +235,18 @@ class MixVisionTransformer(BaseModule):
                           'please use "init_cfg" instead')
         else:
             raise TypeError('pretrained must be a str or None')
-
+ 
         self.num_classes = num_classes
-        self.embed_dims = embed_dims #!DEBUG
         self.depths = depths
         self.pretrained = pretrained
         self.init_cfg = init_cfg
+
+        # PET
+        adapt_blocks = cfg["adapt_blocks"]
+        pet_cls = cfg["pet_cls"]
+        pet_kwargs = {"scale": None}
+
+        self.embed_dims = [_dim for idx, _dim in enumerate(embed_dims) if idx in adapt_blocks]
 
         # patch_embed
         self.patch_embed1 = OverlapPatchEmbed(
@@ -343,7 +343,6 @@ class MixVisionTransformer(BaseModule):
                 sr_ratio=sr_ratios[3]) for i in range(depths[3])
         ])
         self.norm4 = norm_layer(embed_dims[3])
-        a=1
 
         #!DEBUG (order matters)
         self.adapt_blocks = adapt_blocks
@@ -438,7 +437,6 @@ class MixVisionTransformer(BaseModule):
                         p.requires_grad = requires_grad
 
     def forward_features(self, x, modules):
-        a=1
         B = x.shape[0]
         outs = []
 

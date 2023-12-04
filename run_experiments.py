@@ -18,7 +18,7 @@ from mmcv import Config, get_git_hash
 # from mmseg.apis import set_random_seed
 from tools import train
 
-DEBUG = False
+DEBUG = True
 
 
 def run_command(command):
@@ -96,6 +96,7 @@ if __name__ == "__main__":
         config_files.append(cfg_out_file)
         cfgs.append(cfg)
 
+    a=1
     # Training with Generated Configs from experiments.py
     if args.exp is not None:
         for exp in args.exp:

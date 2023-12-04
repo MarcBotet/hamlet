@@ -7,12 +7,15 @@ _base_ = ['../../_base_/models/segformer.py']
 norm_cfg = dict(type='BN', requires_grad=True)
 find_unused_parameters = True
 model = dict(
-    type='CustomEncoderDecoder',
+    type='OthersEncoderDecoder',
     pretrained='pretrained/mit_b5.pth',
-    backbone=dict(type='mit_b5', style='pytorch'),
+    backbone=dict(
+        type='mit_b5',
+        style='pytorch',
+        pet_cls='Adapter',
+        adapt_blocks=[0, 1]),
     decode_head=dict(
-        type="SegFormerHead",
-        # type='OriginalSegFormerHead',
+        type='OriginalSegFormerHead',
         in_channels=[64, 128, 320, 512],
         in_index=[0, 1, 2, 3],
         channels=128,

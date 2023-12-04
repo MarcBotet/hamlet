@@ -9,9 +9,10 @@ domain_order = [
 num_epochs = 3
 
 models = [ # (architecture, backbone)
+    ("segformer", "mitb3_custom"),
     # ("segformer", "mitb5_custom"),
     # ("segformer", "mitb1")
-    ("segformer", "mitb5")
+    # ("segformer", "mitb5")
     # ("upernet", "swin")
 ]
 udas = [
@@ -25,8 +26,7 @@ max_lr = [
 
 lr = [
     # 6e-5
-    # 0.000015,
-    0.00015,
+    0.000015,
 ]
 
 lr_policy = [
@@ -99,8 +99,8 @@ modules_update = "random_modules/online_random.npy"
 # pretrained_segmentator = "pretrained/mitb5_uda.pth"
 # pretrained_segmentator = "pretrained/mit_b5.pth"
 # pretrained_segmentator = "pretrained/segformer.b1.1024x1024.city.160k.pth"
-# pretrained_segmentator = "pretrained/segformer.b3.1024x1024.city.160k.pth"
-pretrained_segmentator = "pretrained/segformer.b5.1024x1024.city.160k.pth"      #segformer (evaluation)
+pretrained_segmentator = "pretrained/segformer.b3.1024x1024.city.160k.pth"
+# pretrained_segmentator = "pretrained/segformer.b5.1024x1024.city.160k.pth"      #segformer (evaluation)
 # pretrained_segmentator = "pretrained/upernet_swin_tiny_patch4_window7_512x512.pth"
 student_pretrained = pretrained_segmentator
 

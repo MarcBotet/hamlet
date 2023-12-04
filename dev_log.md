@@ -364,7 +364,8 @@ or (
                     dataloader,
                     # show=True,
                     show=False,
-                    out_dir=self.work_dir,
+                    # out_dir=self.work_dir,
+                    out_dir=None,
                     num_epoch=runner.iter,
                     dataset_name=dataset_name,
                     img_to_pred=self.img_to_pred,
@@ -373,7 +374,6 @@ or (
                 self.evaluate(dataloader, runner, results, dataset_name)
                 # ugly way to ensure ram does not crash having multiple val datasets
                 gc.collect()
-
         ```
 * `mmseg/apis/train.py`
     - test time batch size 8->1
@@ -398,8 +398,48 @@ or (
                     eval_hook = eval_hook if "video" not in cfg["mode"] else VideoEvalHook
         ```
 
-* block 1>4 -> 1>2
+* Genetic Algorithm을 사용할 hyperparameter tuning 실험 설계
 
+
+# 231204
+## 구현 및 변경사항
+* `mmseg/core/evaluation/eval_hooks.py`
+    - DEBUG 모드에만 pred 디렉토리 출력하도록 변경
+        ```
+            def _do_evaluate(self, runner):
+                """perform evaluation and save ckpt."""
+                if not self._should_evaluate(runner):
+                    return
+
+                self.first = False
+                from mmseg.apis import single_gpu_test
+
+                from run_experiments import DEBUG
+                show = False
+                out_dir = None
+                if DEBUG:
+                    show = True
+                    out_dir = self.out_dir
+
+                for dataloader in self.dataloaders:
+                    dataset_name = dataloader.dataset.name
+                    results = single_gpu_test(
+                        runner.model,
+                        dataloader,
+                        show=show,
+                        out_dir=out_dir,
+                        num_epoch=runner.iter,
+                        dataset_name=dataset_name,
+                        img_to_pred=self.img_to_pred,
+                        efficient_test=self.efficient_test,
+                    )
+                    self.evaluate(dataloader, runner, results, dataset_name)
+                    # ugly way to ensure ram does not crash having multiple val datasets
+                    gc.collect()
+        ```
+        - show=False, out_dir=None 일 때 pred 디렉토리 출력하지 않음
+
+* 
 
 
 
