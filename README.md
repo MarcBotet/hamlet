@@ -64,6 +64,8 @@ and extract them to `/data/datasets/cityscapes`.
 
 **Rainy Cityscapes:** Please follow the steps as shown here: https://team.inria.fr/rits/computer-vision/weather-augment/
 
+**You can [contact us](marcbotetcolomer@gmail.com) to obtain the Rainy Cityscapes dataset**
+
 We refer to [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) for further instructions about the dataset structure.
 
 Prepare the source dataset:
@@ -74,7 +76,7 @@ python tools/convert_datasets/cityscapes.py /data/datasets/Cityscapes --out-dir 
 
 ## Training
 
-For convenience, it is possible to run the configuration selecting experiment -1. If wandb is configurated can be activated by setting the wandb argument to 1
+For convenience, it is possible to run the configuration by selecting experiment -1. If wandb is configurated, it can be activated by setting the wandb argument to 1
 
 ```shell
 python run_experiments.py --exp -1 --wandb 1
@@ -92,11 +94,11 @@ This code is based on MMSegmentation project. The most relevant files are:
 * [online_src/online_runner.py](online_src/online_runner.py): Runner for Hamlet.
 * [online_src/buffer.py](online_src/buffer.py): Buffer sampling methods
 * [mmseg/models/segmentors/modular_encoder_decoder.py](mmseg/models/segmentors/modular_encoder_decoder.py): Implementation of HAMT
-* [mmseg/models/decode_heads/incremental_decode_head.py]([mmseg/models/decode_heads/incremental_decode_head.py): Handle the lightweight decoder
-* [mmseg/models/decode_heads/segformer_head.py]([mmseg/models/decode_heads/segformer_head.py): Implementation of the lightweight decoder on SegFormer
-* [mmseg/models/backbones/mix_transformer.py]([mmseg/models/backbones/mix_transformer.py): Implementationf of modular freezing for HAMT
-* [mmseg/models/uda/dacs.py]([mmseg/models/uda/dacs.py): UDA method using hamlet strategies
-* [mmseg/core/evaluation/eval_hooks.py]([mmseg/core/evaluation/eval_hooks.py): Evaluation methods
+* [mmseg/models/decode_heads/incremental_decode_head.py](mmseg/models/decode_heads/incremental_decode_head.py): Handle the lightweight decoder
+* [mmseg/models/decode_heads/segformer_head.py](mmseg/models/decode_heads/segformer_head.py): Implementation of the lightweight decoder on SegFormer
+* [mmseg/models/backbones/mix_transformer.py](mmseg/models/backbones/mix_transformer.py): Implementationf of modular freezing for HAMT
+* [mmseg/models/uda/dacs.py](mmseg/models/uda/dacs.py): UDA method using hamlet strategies
+* [mmseg/core/evaluation/eval_hooks.py](mmseg/core/evaluation/eval_hooks.py): Evaluation methods
 
 ## Acknowledgements
 
