@@ -64,7 +64,7 @@ and extract them to `/data/datasets/cityscapes`.
 
 **Rainy Cityscapes:** Please follow the steps as shown here: https://team.inria.fr/rits/computer-vision/weather-augment/
 
-**You can [contact us](marcbotetcolomer@gmail.com) to obtain the Rainy Cityscapes dataset**
+**If you have troubles creating the rainy dataset, please contact us in domain-adaptation-group@googlegroups.com to obtain the Rainy Cityscapes dataset**
 
 We refer to [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) for further instructions about the dataset structure.
 
